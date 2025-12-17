@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FBX Viewer</title>
+
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: #b30000; /* QIZIL FON */
+    }
+    canvas {
+        display: block;
+    }
+</style>
+</head>
+<body>
+
+<!-- Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/loaders/FBXLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+    // SCENE
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xb30000); // Qizil fon
+
+    // CAMERA
+    const camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+    );
+
+    // RENDERER
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    // LIGHTS – model ajralib turishi uchun kuchliroq
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222222, 1.5);
+    scene.add(hemiLight);
+
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+    keyLight.position.set(5, 10, 7);
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    fillLight.position.set(-5, 3, -5);
+    scene.add(fillLight);
+
+    // CONTROLS (Android touch)
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.enablePan = false;
+
+    // FBX LOADER
+    const loader = new THREE.FBXLoader();
+    loader.load(
+        'https://raw.githubusercontent.com/Davron2003/Fbx/11731f75ac58f8d629c81e6a1209818d298addf0/Hyper-casual%20Charcter.fbx',
+        (object) => {
+
+            // FBX o‘lchamini moslash
+            object.scale.set(0.01, 0.01, 0.01);
+
+            // Agar model juda qorong‘i bo‘lsa — materialni yorqinlashtiramiz
+            object.traverse((child) => {
+                if (child.isMesh) {
+                    child.material.side = THREE.DoubleSide;
+                    child.material.needsUpdate = true;
+                }
+            });
+
+            scene.add(object);
+
+            // Kamera joylashuvi
+            camera.position.set(0, 1.6, 3);
+            controls.target.set(0, 1, 0);
+            controls.update();
+        },
+        (xhr) => {
+            console.log(Math.round((xhr.loaded / xhr.total) * 100) + '% loaded');
+        },
+        (error) => {
+            console.error('FBX load error:', error);
+        }
+    );
+
+    // ANIMATE
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // RESIZE
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+
+</body>
+</html>
